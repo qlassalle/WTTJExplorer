@@ -5,10 +5,17 @@ import subprocess
 from Job import Job
 
 EXCLUDED_CONTRACT_TYPE = ['Stage', 'CDD', 'INTERNSHIP']
-EXLUDED_COMPANY = ['mirakl', 'happn', 'la combe du lion vert', 'wedoogift', 'margo', 'manomano', 'aca']
-EXCLUED_COMPANY_SIZE = ['> 2000 salariés', '< 15 salariés']
+# Name of the company you're not interested in
+EXLUDED_COMPANY = ['mirakl', 'happn', 'la combe du lion vert', 'wedoogift', 'margo', 'manomano', 'aca', 'capfi',
+                   'voltalis', 'playplay', 'armis', 'cardiweb', 'superpitch']
+EXCLUDED_COMPANY_SIZE = ['> 2000 salariés', '< 15 salariés']
+# Name of the references to include. Some entries match your research but may not be interesting or relevant. Add the
+# reference here and it won't appear again
+EXCLUDED_REFERENCE = ['MATTE_ldmMwPW', 'MOODW_JkDzp2b', 'ALSID_w92q4PD', 'HEMBL_e30OMKV', 'KLANI_Po40Ydm',
+                      'TT_jANAQbg', 'TT_5ez40kO', 'TT_9oQMlAP', 'SUPER_Jyar5rb']
 RESULTS_PER_PAGE = '100'
-KEYWORD = 'java'
+# The word that you would have typed in the search bar on WTTJ
+KEYWORD = 'Spring'
 
 
 cmd = '''
@@ -74,7 +81,7 @@ def is_blacklisted_company(entry):
 
 
 def is_within_size_range(entry):
-    return not entry['organization']['size']['fr'] in EXCLUED_COMPANY_SIZE
+    return not entry['organization']['size']['fr'] in EXCLUDED_COMPANY_SIZE
 
 
 def is_misleading_java_title(entry):
@@ -90,9 +97,13 @@ def is_misleading_java_title(entry):
     return 'front end developer' in job_title or 'frontend developer' in job_title
 
 
+def is_excluded_reference(entry):
+    return entry['reference'] in EXCLUDED_REFERENCE
+
+
 def is_relevant(entry):
     return is_eligible(entry) and is_blacklisted_company(entry) and is_within_size_range(entry) \
-           and not is_misleading_java_title(entry)
+           and not is_misleading_java_title(entry) and not is_excluded_reference(entry)
 
 
 def process_request():
@@ -102,7 +113,7 @@ def process_request():
     for hit in json_response['hits']:
         if not is_relevant(hit):
             continue
-        job = Job(hit['name'], hit['published_at'], hit['organization']['name'], hit['organization']['size']['fr'],
+        job = Job(hit['reference'], hit['name'], hit['published_at'], hit['organization']['name'], hit['organization']['size']['fr'],
                   hit['contract_type'], hit['slug'], hit['office']['city'])
         jobs.append(job)
 

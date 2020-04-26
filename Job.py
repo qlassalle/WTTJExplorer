@@ -1,4 +1,5 @@
 class Job:
+    reference = ''
     name = ''
     published_at = ''
     organization_name = ''
@@ -7,8 +8,9 @@ class Job:
     url = ''
     location = ''
 
-    def __init__(self, name, published_at, organzation_name, organization_size, contract_type, slug, location) -> None:
+    def __init__(self, reference, name, published_at, organzation_name, organization_size, contract_type, slug, location) -> None:
         super().__init__()
+        self.reference = reference
         self.name = name
         self.published_at = published_at
         self.organization_name = organzation_name

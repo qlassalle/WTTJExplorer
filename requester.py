@@ -3,23 +3,13 @@ import shlex
 import subprocess
 from datetime import datetime
 
+import preferences
 from Job import Job
 
-EXCLUDED_CONTRACT_TYPE = ['Stage', 'CDD', 'INTERNSHIP']
-# Name of the company you're not interested in. MUST BE IN LOWERCASE.
-EXLUDED_COMPANY = ['mirakl', 'happn', 'la combe du lion vert', 'wedoogift', 'margo', 'manomano', 'aca', 'capfi',
-                   'voltalis', 'playplay', 'armis', 'cardiweb', 'superpitch', 'linkvalue', 'neoxam', 'soat']
-EXCLUDED_COMPANY_SIZE = ['> 2000 salariés', '< 15 salariés']
-# Name of the references to include. Some entries match your research but may not be interesting or relevant. Add the
-# reference here and it won't appear again
-EXCLUDED_REFERENCE = ['MATTE_ldmMwPW', 'MOODW_JkDzp2b', 'ALSID_w92q4PD', 'HEMBL_e30OMKV', 'KLANI_Po40Ydm',
-                      'TT_jANAQbg', 'TT_5ez40kO', 'TT_9oQMlAP', 'SUPER_Jyar5rb', 'SEWAN_YbXm26P', 'THIGA_w1meGdb',
-                      'HELLO_6o1m49V', 'SM_w0Q23x8', 'YC_GQo2b9X']
 RESULTS_PER_PAGE = '200'
 # The word that you would have typed in the search bar on WTTJ
 KEYWORD = 'Spring'
 LAST_VISIT_DATE = datetime(year=2020, month=4, day=26)
-
 
 cmd = '''
 curl 'https://csekhvms53-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20vanilla%20JavaScript%20(lite)%203.24.12%3Breact-instantsearch%205.3.2%3BJS%20Helper%20(2.28.0)&x-algolia-application-id=CSEKHVMS53&x-algolia-api-key=02f0d440abc99cae37e126886438b266'
@@ -76,15 +66,15 @@ def run_request():
 
 
 def is_eligible(entry):
-    return not entry['contract_type'] in EXCLUDED_CONTRACT_TYPE
+    return not entry['contract_type'] in preferences.EXCLUDED_CONTRACT_TYPE
 
 
 def is_blacklisted_company(entry):
-    return not str.lower(entry['organization']['name']) in EXLUDED_COMPANY
+    return not str.lower(entry['organization']['name']) in preferences.EXCLUDED_COMPANY
 
 
 def is_within_size_range(entry):
-    return not entry['organization']['size']['fr'] in EXCLUDED_COMPANY_SIZE
+    return not entry['organization']['size']['fr'] in preferences.EXCLUDED_COMPANY_SIZE
 
 
 def is_misleading_java_title(entry):
@@ -101,7 +91,7 @@ def is_misleading_java_title(entry):
 
 
 def is_excluded_reference(entry):
-    return entry['reference'] in EXCLUDED_REFERENCE
+    return entry['reference'] in preferences.EXCLUDED_REFERENCE
 
 
 def is_relevant(entry):
@@ -121,8 +111,8 @@ def process_request():
     for hit in json_response['hits']:
         if not is_relevant(hit) or has_been_seen(hit):
             continue
-        job = Job(hit['reference'], hit['name'], hit['published_at'], hit['organization']['name'], hit['organization']['size']['fr'],
-                  hit['contract_type'], hit['slug'], hit['office']['city'])
+        job = Job(hit['reference'], hit['name'], hit['published_at'], hit['organization']['name'],
+                  hit['organization']['size']['fr'], hit['contract_type'], hit['slug'], hit['office']['city'])
         jobs.append(job)
 
     print(f"{len(jobs)} entries after applying filters")

@@ -1,21 +1,24 @@
 import json
 import shlex
 import subprocess
+from datetime import datetime
 
 from Job import Job
 
 EXCLUDED_CONTRACT_TYPE = ['Stage', 'CDD', 'INTERNSHIP']
-# Name of the company you're not interested in
+# Name of the company you're not interested in. MUST BE IN LOWERCASE.
 EXLUDED_COMPANY = ['mirakl', 'happn', 'la combe du lion vert', 'wedoogift', 'margo', 'manomano', 'aca', 'capfi',
-                   'voltalis', 'playplay', 'armis', 'cardiweb', 'superpitch']
+                   'voltalis', 'playplay', 'armis', 'cardiweb', 'superpitch', 'linkvalue', 'neoxam', 'soat']
 EXCLUDED_COMPANY_SIZE = ['> 2000 salariés', '< 15 salariés']
 # Name of the references to include. Some entries match your research but may not be interesting or relevant. Add the
 # reference here and it won't appear again
 EXCLUDED_REFERENCE = ['MATTE_ldmMwPW', 'MOODW_JkDzp2b', 'ALSID_w92q4PD', 'HEMBL_e30OMKV', 'KLANI_Po40Ydm',
-                      'TT_jANAQbg', 'TT_5ez40kO', 'TT_9oQMlAP', 'SUPER_Jyar5rb']
-RESULTS_PER_PAGE = '100'
+                      'TT_jANAQbg', 'TT_5ez40kO', 'TT_9oQMlAP', 'SUPER_Jyar5rb', 'SEWAN_YbXm26P', 'THIGA_w1meGdb',
+                      'HELLO_6o1m49V', 'SM_w0Q23x8', 'YC_GQo2b9X']
+RESULTS_PER_PAGE = '200'
 # The word that you would have typed in the search bar on WTTJ
 KEYWORD = 'Spring'
+LAST_VISIT_DATE = datetime(year=2020, month=4, day=26)
 
 
 cmd = '''
@@ -94,7 +97,7 @@ def is_misleading_java_title(entry):
                 return False
         return True
 
-    return 'front end developer' in job_title or 'frontend developer' in job_title
+    return 'front end developer' in job_title or 'frontend developer' in job_title or 'consultant' in job_title
 
 
 def is_excluded_reference(entry):
@@ -106,12 +109,17 @@ def is_relevant(entry):
            and not is_misleading_java_title(entry) and not is_excluded_reference(entry)
 
 
+def has_been_seen(entry):
+    published_at = entry['published_at'][0:10]
+    return datetime.strptime(published_at, '%Y-%m-%d') < LAST_VISIT_DATE
+
+
 def process_request():
     jobs = []
     json_response = run_request()
     print(f"{len(json_response['hits'])} entries before applying filters ...")
     for hit in json_response['hits']:
-        if not is_relevant(hit):
+        if not is_relevant(hit) or has_been_seen(hit):
             continue
         job = Job(hit['reference'], hit['name'], hit['published_at'], hit['organization']['name'], hit['organization']['size']['fr'],
                   hit['contract_type'], hit['slug'], hit['office']['city'])
